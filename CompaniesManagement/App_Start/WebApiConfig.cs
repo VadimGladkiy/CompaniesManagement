@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Web.Http;
+using System.Web.Http.Routing.Constraints;
 
 namespace CompaniesManagement
 {
@@ -13,12 +14,24 @@ namespace CompaniesManagement
 
             // Web API routes
             config.MapHttpAttributeRoutes();
-
+            /*
+            config.Routes.MapHttpRoute(
+                            name: "SpreadApi",
+                            routeTemplate: "api/Crud/ids",
+                            defaults: new { ids = RouteParameter.Optional },
+                            constraints: new
+                            {
+                                id = new IntRouteConstraint()
+                            }
+                        );
+*/
             config.Routes.MapHttpRoute(
                 name: "DefaultApi",
-                routeTemplate: "api/{controller}/{id}",
-                defaults: new { id = RouteParameter.Optional }
+                routeTemplate: "api/{controller}/{ids}",
+                defaults: new { ids = RouteParameter.Optional }
             );
+            
+
         }
     }
 }

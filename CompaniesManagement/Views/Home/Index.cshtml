@@ -1,0 +1,230 @@
+﻿ 
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" charset="utf-8"/>
+    <title>Index</title>
+    <style>
+        p {
+            margin: 0;
+        }
+    </style>
+    <script src="~/Scripts/jquery-3.1.1.js"></script>
+    
+    <script type="text/javascript">
+        $(document).ready(function ()
+        {
+            // create reference to adding a base company
+            var additionBase = $('<input type="checkbox" />');
+            additionBase.addClass('addBaseHandler');
+
+            // add CRUD on View for current item
+            var createButton = $('<input type = "button" value="addSubItem">');
+            createButton.addClass('addSubItem');
+
+            var readButton = $('<input type = "button" value="readBranch">');
+            readButton.addClass('readBranch');
+
+            var updateButton = $('<input type="button" value="update">');
+            //updateButton.id = value.company_Identifier + '_updateThe';
+
+            var deleteButton = $('<input  type="button" value="delete">');
+            // deleteButton.id = value.company_Identifier + '_deleteThe';
+
+            var $addForm = $('<form id ="addItemBase" >' +
+                                 '<p>write Name of a new company</p>' +
+                                 '<input type="text" id="baseName" name="Name"/>' +
+                                 '<p>write Earnings for a new company </p>' +
+                                 '<input type="text" id="baseEarn" name="AnnualEarnings"/>' +
+                                 '<input type="button" id="baseSubmit" value="sendData" />' +
+                                 '<input type="button" id="closeForm" value="close" />' +
+                                 '<input type="hidden" id="baseParent" value=""/>' +
+                                 '</form>');
+            var labelCollector
+                       = $('<label>Collect items marked checkboxes into a new base item</label>');
+            var butCollector = $('<input type="button" id="Unite" value="Collect"/>');
+            
+            var checkboxes = [];
+            var itemsIdsForRead =[];
+
+            $('body').prepend(butCollector);
+            $('body').prepend(labelCollector);
+            $.ajax({
+                type: 'Get',
+                url: '/api/Crud',
+                dataType: 'json',
+                success: function (data)
+                {
+                    $.each(data, function (index, value)
+                    {
+                        var myDiv = $('<div></div>')
+                        .attr('id', value.company_Identifier);
+
+                        myDiv.text(' '+value.company_Identifier+ '|' +
+                        value.Name+ '|' + value.AnnualEarnings+' ');
+
+                        // appends
+                        if (value.baseCompanyId == null) {
+                   
+                            $(myDiv).prepend(additionBase.clone());
+                            $('body').append(myDiv);
+                    
+                            myDiv.prepend('<span style="margin-left: ' + 0 + 'px"></span>');
+                        }
+                        else {
+                            var baseId = value.baseCompanyId;
+          
+                            var span = parseInt($('#'+baseId).find('span').css('margin-left'));
+                            if (isNaN(span)) span = 0;
+                 
+                            $(myDiv).prepend(additionBase.clone());
+                            myDiv.prepend('<span style="margin-left: ' + (span +50) + 'px"></span>');
+
+                            $('#' + baseId).append(myDiv);
+                        }
+               
+                        $(myDiv).append(createButton.clone());
+                        $(myDiv).append(readButton.clone());
+                        $(myDiv).append(updateButton.clone());
+                        $(myDiv).append(deleteButton.clone());
+
+                    });
+                    $('.addBaseHandler').on('click', function () { });
+                    $('#Unite').on('click', function () {
+                        checkboxes = [];
+                        $(this).after($addForm);
+                        var box = $('.addBaseHandler:checked');
+
+                        var par = box.eq(0).parent().parent().attr('id');
+                        $("#baseParent").val(par);
+                        //   console.log(par);
+                        var point;
+                        var Div;
+                        $.each(box, function (index, value) {
+                            Div = $(value).parent();
+                            point = Div.attr('id');
+                            checkboxes.push(point);
+                        })
+                        //console.log('checkboxes ' + checkboxes);
+                    });
+                    $('.addSubItem').on('click', function () {
+                        console.log('addSubClicked');
+                        $('#Unite').after($addForm);
+                        var par = $(this).parent().attr('id');
+                        $("#baseParent").val(par);
+
+                        $('.addBaseHandler').prop('checked', false);
+                        checkboxes = [];
+                    });
+                    $('.readBranch').on('click', function () {
+                        itemsIdsForRead = [];
+                        var $branches = $(this).parent().parent().find('div');
+                       
+                        $.each($branches, function (index) {
+                            itemsIdsForRead.push($(this).attr('id'));
+                        });
+                        console.log(itemsIdsForRead);
+                        
+                        $.ajax({
+                            url: '/api/Crud/ids/ByIds',
+                            type: 'Get',
+                            dataType: 'json',
+                            //сontentType: 'application/x-www-form-urlencoded',
+                            data: { "ids": itemsIdsForRead },
+                            сontentType: 'application/json',
+                            success: function (data) { Spreads(data); alert('Success'); }
+                        });
+                    });
+                    $addForm.find('#baseSubmit').on('click', function () {
+                        //  console.log($('#baseParent').val());
+                            console.log(checkboxes);
+                        $.ajax({
+                            url: '/api/Crud',
+                            type: 'Post',
+                            dataType: 'json',
+                            сontentType: 'application/x-www-form-urlencoded',
+                            data: {
+                                "company":
+                                    {
+                                        company_Identifier: '',
+                                        Name: $('#baseName').val(),
+                                        AnnualEarnings: $('#baseEarn').val(),
+                                        baseCompanyId: ''
+                                    },
+
+                                "childs": checkboxes,
+                                "parent": $('#baseParent').val()
+                            },
+                            success: function (data) {
+                                var $parent = $('#' + data.parent);
+                                //console.log($parent.attr('id'));
+
+                                var $bDiv = $('<div></div>');
+                                $bDiv.attr('id', data.company.company_Identifier);
+
+                                $bDiv.text(' ' + data.company.company_Identifier + '|' +
+                                data.company.Name + '|' + data.company.AnnualEarnings + ' ');
+
+                                var span = parseInt($parent.find('span').css('margin-left'));
+                                if (isNaN(span)) span = 0;
+                                $parent.append($bDiv);
+                                $bDiv.prepend('<span style="margin-left: ' + (span + 50) + 'px"></span>');
+                                $($bDiv).find('span').after(additionBase.clone());
+
+                                $($bDiv).append(createButton.clone());
+                                $($bDiv).append(readButton.clone());
+                                $($bDiv).append(updateButton.clone());
+                                $($bDiv).append(deleteButton.clone());
+
+                                if (data.childs.length > 0) {
+                                    var $ChildrenDivs;
+                                    data.childs.forEach(function (item, index, array) {
+
+                                        if (typeof $ChildrenDivs == 'undefined') {
+                                            $ChildrenDivs = $('#' + item);
+                                            // console.log('if=');
+                                        } else {
+                                            $ChildrenDivs.add($('#' + item));
+                                            // console.log('else');
+                                        }
+                                    });
+                                    // wraping
+                                    var sp = $ChildrenDivs.find('span').first();
+                                    var spE = parseInt(sp.css('margin-left'));
+                                    if (isNaN(spE)) spE = 0;
+                                    //console.log(spE);
+                                    sp.css('margin-left', spE + 50);
+                                    $bDiv.append($ChildrenDivs);
+
+                                }
+                            }
+                        })
+                            .fail(function () {
+                                alert('data is not added');
+                            });
+                    });
+                    $addForm.find('#closeForm').on('click', function () {
+                        $(this).parent().detach();
+
+                    });
+                }}); 
+            
+            function Spreads(data)
+            {
+                $.each(data, function(index, value)
+                {
+                    console.log(value.company_Identifier);
+                });
+            }
+                
+        });
+    </script>
+</head>
+<body>
+  
+</body>
+
+</html>
