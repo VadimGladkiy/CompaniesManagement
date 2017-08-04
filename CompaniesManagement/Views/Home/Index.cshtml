@@ -5,12 +5,87 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta name="viewport" content="width=device-width" charset="utf-8"/>
+    <meta name="viewport" content="width=device-width" charset="utf-8"  />
     <title>Index</title>
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous" />
     <style>
+        body 
+        {
+
+        }
+        div 
+        {
+
+        }
         p {
             margin: 0;
         }
+        .wrapBlock {
+            margin-top: 10px;
+        }
+        .wrapBlock i{
+            background-color: darkgrey;
+            width: 40px;
+            border-radius: 3px;
+            margin-right: 10px;
+            color: #000;
+            text-align: center;
+            line-height: 25px;
+        }
+        .align{
+            margin-right: 20px;
+        }
+
+        /**/
+        #modal_form,#putForm{
+	width: 300px; 
+	height: 300px; /* Рaзмеры дoлжны быть фиксирoвaны */
+	border-radius: 5px;
+	border: 3px #000 solid;
+	
+	position: fixed; /* чтoбы oкнo былo в видимoй зoне в любoм месте */
+	top: 45%; /* oтступaем сверху 45%, oстaльные 5% пoдвинет скрипт */
+	left: 50%; /* пoлoвинa экрaнa слевa */
+	margin-top: -150px;
+	margin-left: -150px; /* тут вся мaгия центрoвки css, oтступaем влевo и вверх минус пoлoвину ширины и высoты сooтветственнo =) */
+	display: none; /* в oбычнoм сoстoянии oкнa не дoлжнo быть */
+	opacity: 0; /* пoлнoстью прoзрaчнo для aнимирoвaния */
+	z-index: 5; /* oкнo дoлжнo быть нaибoлее бoльшем слoе */
+	padding: 20px 10px;
+}
+#modal_form{
+    background: #fff;
+}
+/* Кнoпкa зaкрыть для тех ктo в тaнке) */
+#modal_form #modal_close, #putForm #PUT_close{
+	width: 21px;
+	height: 21px;
+	position: absolute;
+	top: 10px;
+	right: 10px;
+	cursor: pointer;
+	display: block;
+}
+#putForm {
+    width: 300px;
+    height: 100px;
+    background: lightblue;
+        }
+/* Пoдлoжкa */
+#overlay {
+	z-index:3; /* пoдлoжкa дoлжнa быть выше слoев элементoв сaйтa, нo ниже слoя мoдaльнoгo oкнa */
+	position:fixed; /* всегдa перекрывaет весь сaйт */
+	background-color:#000; /* чернaя */
+	opacity:0.8; /* нo немнoгo прoзрaчнa */
+	-moz-opacity:0.8; /* фикс прозрачности для старых браузеров */
+	filter:alpha(opacity=80);
+	width:100%; 
+	height:100%; /* рaзмерoм вo весь экрaн */
+	top:0; /* сверху и слевa 0, oбязaтельные свoйствa! */
+	left:0;
+	cursor:pointer;
+	display:none; /* в oбычнoм сoстoянии её нет) */
+}
     </style>
     <script src="~/Scripts/jquery-3.1.1.js"></script>
     
@@ -22,16 +97,16 @@
             additionBase.addClass('addBaseHandler');
 
             // add CRUD on View for current item
-            var createButton = $('<input type = "button" value="addSubItem">');
+            var createButton = $('<a href="#"><i class="fa fa-plus"></i></a>');
             createButton.addClass('addSubItem');
-
-            var readButton = $('<input type = "button" value="readBranch">');
+            
+            var readButton = $('<a href="#"><i class="fa fa-id-card-o"></i></a>');
             readButton.addClass('readBranch');
 
-            var updateButton = $('<input type="button" value="update">');
-            //updateButton.id = value.company_Identifier + '_updateThe';
+            var updateButton = $('<a href="#"><i class="fa fa-pencil"></i></a>');
+            updateButton.addClass('updateItem');
 
-            var deleteButton = $('<input  type="button" value="delete">');
+            var deleteButton = $('<a href="#"><i class="fa fa-times"></i></a>');
             // deleteButton.id = value.company_Identifier + '_deleteThe';
 
             var $addForm = $('<form id ="addItemBase" >' +
@@ -62,9 +137,10 @@
                     {
                         var myDiv = $('<div></div>')
                         .attr('id', value.company_Identifier);
+                        myDiv.addClass('wrapBlock');
 
-                        myDiv.text(' '+value.company_Identifier+ '|' +
-                        value.Name+ '|' + value.AnnualEarnings+' ');
+                        myDiv.html('<span class="align"> '+value.company_Identifier+ '|' +
+                        value.Name+ '|' + value.AnnualEarnings+'</span>');
 
                         // appends
                         if (value.baseCompanyId == null) {
@@ -111,7 +187,7 @@
                         //console.log('checkboxes ' + checkboxes);
                     });
                     $('.addSubItem').on('click', function () {
-                        console.log('addSubClicked');
+                       // console.log('addSubClicked');
                         $('#Unite').after($addForm);
                         var par = $(this).parent().attr('id');
                         $("#baseParent").val(par);
@@ -121,12 +197,12 @@
                     });
                     $('.readBranch').on('click', function () {
                         itemsIdsForRead = [];
-                        var $branches = $(this).parent().parent().find('div');
+                        var $branches = $(this).parent().parent().find('div.wrapBlock');
                        
                         $.each($branches, function (index) {
                             itemsIdsForRead.push($(this).attr('id'));
                         });
-                        console.log(itemsIdsForRead);
+                     //   console.log(itemsIdsForRead);
                         
                         $.ajax({
                             url: '/api/Crud/ids/ByIds',
@@ -135,8 +211,53 @@
                             //сontentType: 'application/x-www-form-urlencoded',
                             data: { "ids": itemsIdsForRead },
                             сontentType: 'application/json',
-                            success: function (data) { Spreads(data); alert('Success'); }
+                            success: function (data) {
+                           // Spreads(data);
+                            $('#overlay').fadeIn(400, // снaчaлa плaвнo пoкaзывaем темную пoдлoжку
+                            function () { // пoсле выпoлнения предъидущей aнимaции
+                                $('#modal_form')
+                                .css('display', 'block') // убирaем у мoдaльнoгo oкнa display: none;
+                                .animate({ opacity: 1, top: '50%' }, 200); // плaвнo прибaвляем прoзрaчнoсть oднoвременнo сo съезжaнием вниз
+                                $('#modal_form').find('#modal_content')
+                                    .append(Spreads(data));
+
+                            });
+                               
+                            }
                         });
+                    });
+                    $('.updateItem').on('click', function () {
+
+                        var par = $(this).parent().attr('id');
+                        $("#putId").val(par);
+                        // показать окно
+                        $('#putForm')
+                        .css('display', 'block') 
+                        .animate({ opacity: 1, top: '50%' }, 200);
+                    });
+                    $('#putForm').find('#putSubmit').on('click', function ()
+                    {
+                        $.ajax({
+                            url: '/api/Crud/put',
+                            type: 'Put',
+                            dataType: 'json',
+                            сontentType: 'application/x-www-form-urlencoded',
+                            data: {                                
+                                    "company_Identifier" :
+                                    $('#putForm').find('#putId').val(),
+                                    "Name" :
+                                    $('#putForm').find('#putName').val(),
+                                    "AnnualEarnings" :
+                                    $('#putForm').find('#putEarn').val(),
+                                    "baseCompanyId" :
+                                    $('#putForm').find('#putParent').val()                                
+                            },
+                            success: function (data) {
+                                console.log(data);
+                                alert('success');
+                            }
+                        });
+
                     });
                     $addForm.find('#baseSubmit').on('click', function () {
                         //  console.log($('#baseParent').val());
@@ -164,6 +285,7 @@
 
                                 var $bDiv = $('<div></div>');
                                 $bDiv.attr('id', data.company.company_Identifier);
+                                $bDiv.addClass('wrapBlock');
 
                                 $bDiv.text(' ' + data.company.company_Identifier + '|' +
                                 data.company.Name + '|' + data.company.AnnualEarnings + ' ');
@@ -214,17 +336,63 @@
             
             function Spreads(data)
             {
+                var str =[];
                 $.each(data, function(index, value)
                 {
-                    console.log(value.company_Identifier);
+                    if (index == 0) {
+                        str.push ( '<li>' + value.Name + ' | ' +
+                            value.AnnualEarnings + '</li>');
+                        str.push('<li> depended companies: </li>');
+                    } else
+                    {
+                        str.push( '<li>' + value.Name+',' + '</li>');
+                    }
+                    //console.log(str);
                 });
+                return str;
             }
-                
+            /* Зaкрытие мoдaльнoгo oкнa, тут делaем тo же сaмoе нo в oбрaтнoм пoрядке */
+            $('#modal_close, #overlay').click(function () { // лoвим клик пo крестику или пoдлoжке
+                $('#modal_form')
+                    .animate({ opacity: 0, top: '45%' }, 200,  // плaвнo меняем прoзрaчнoсть нa 0 и oднoвременнo двигaем oкнo вверх
+                        function () { // пoсле aнимaции
+                            $(this).css('display', 'none'); // делaем ему display: none;    
+                            $('#overlay').fadeOut(400);
+                            $('#modal_form').find('#modal_content').empty();
+                        }
+                    );
+            });
+            $('#PUT_close').on('click', function () {
+                $('#putForm').css('display', 'none');
+            });
+            $('#putForm').find('#cleanPuting').on('click', function () {
+                $('#putForm').find('input[type="text"]').val('');          
+            });
+            
         });
     </script>
 </head>
 <body>
-  
+    <div id="modal_form">
+        <!-- Сaмo oкнo -->
+        <span id="modal_close">X</span> <!-- Кнoпкa зaкрыть -->
+        <!-- Тут любoе сoдержимoе -->
+        <ul id="modal_content"></ul>
+    </div>
+    <div id="overlay"></div><!-- Пoдлoжкa -->
+    <div id="putForm">
+        <!-- Сaмo oкнo -->
+        <span id="PUT_close">X</span> <!-- Кнoпкa зaкрыть -->
+
+        <p>rewrite a name for the company</p>
+        <input type="text" id="putName" name="Name" />
+        <p>rewrite annualEarnings for the company </p>
+        <input type="text" id="putEarn" name="AnnualEarnings" />
+        <input type="button" id="putSubmit" value="Update" />
+        <input type="button" id="cleanPuting" value="clean" />
+        <input type="hidden" id="putParent" value="" />
+        <input type="hidden" id="putId" value="" />
+    </div>
 </body>
 
 </html>

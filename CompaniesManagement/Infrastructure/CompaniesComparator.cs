@@ -31,8 +31,16 @@ namespace CompaniesManagement.Infrastructure
         }
         private Company getNext( Company getPre )
         {
-            return uoListToCompare.Where(x => x.company_Identifier
-                                           == getPre.baseCompanyId).First();
+            try
+           {
+                return uoListToCompare.Where(x => x.company_Identifier
+                                               == getPre.baseCompanyId).First();
+           }
+           catch (InvalidOperationException e)
+           {
+                getPre.baseCompanyId = null; 
+                return getPre;
+           }
         }
         public void setUnorderedList(IEnumerable<Company> uoList)
         {

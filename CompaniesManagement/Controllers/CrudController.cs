@@ -52,7 +52,7 @@ namespace CompaniesManagement.Controllers
                     "Companies do not exist");
             }
             CompsComparer2.setUnorderedList(box); 
-
+            
             IEnumerable<Company> branch = box.OrderBy(x => x, CompsComparer2);
             return Request.CreateResponse(HttpStatusCode.OK , branch);
         }    
@@ -134,26 +134,26 @@ namespace CompaniesManagement.Controllers
             }
 
         }
-        [HttpPut]
-        public HttpResponseMessage PutEmployee([FromBody] CompanyInfo newData)
+        
+        [Route("api/Crud/put")]
+        public HttpResponseMessage PutEmployee([FromBody] Company newData)
         {
             var _dbContext = new DataContext();
             var wantedComp = _dbContext.Companies
-                .First(x => x.company_Identifier == newData.parent);
+                .First(x => x.company_Identifier == newData.company_Identifier);
             if (wantedComp == null)
             {
                 return Request.CreateErrorResponse(HttpStatusCode.NotFound,
-                    "Company with id " + newData.parent.ToString() + " not found to update");
+                    "Company with id " + newData.company_Identifier.ToString() + " not found to update");
             }
             else
             {
-                wantedComp.company_Identifier = newData.company.company_Identifier;
-                wantedComp.Name = newData.company.Name;
-                wantedComp.AnnualEarnings = newData.company.AnnualEarnings;
-                wantedComp.baseCompanyId = newData.company.baseCompanyId;
-
+               // wantedComp.company_Identifier = newData.company_Identifier;
+                wantedComp.Name = newData.Name;
+                wantedComp.AnnualEarnings = newData.AnnualEarnings;
+              
                 _dbContext.SaveChanges();
-                return Request.CreateResponse(HttpStatusCode.OK, newData);
+                return Request.CreateResponse(HttpStatusCode.OK, wantedComp);
             }
         }
     }
