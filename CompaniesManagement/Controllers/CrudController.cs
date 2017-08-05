@@ -14,7 +14,7 @@ namespace CompaniesManagement.Controllers
     {
         //get
         [HttpGet]
-       // [Route("/api/Crud/Box")]
+        // [Route("/api/Crud/Box")]
         public HttpResponseMessage GetBox()
         {
             // create db context
@@ -35,7 +35,7 @@ namespace CompaniesManagement.Controllers
             else
             {
                 return Request.CreateResponse(HttpStatusCode.NoContent);
-            }        
+            }
         }
         [HttpGet]
         [Route("api/Crud/{ids}/ByIds")]
@@ -51,15 +51,15 @@ namespace CompaniesManagement.Controllers
                 return Request.CreateErrorResponse(HttpStatusCode.NotFound,
                     "Companies do not exist");
             }
-            CompsComparer2.setUnorderedList(box); 
-            
+            CompsComparer2.setUnorderedList(box);
+
             IEnumerable<Company> branch = box.OrderBy(x => x, CompsComparer2);
-            return Request.CreateResponse(HttpStatusCode.OK , branch);
-        }    
+            return Request.CreateResponse(HttpStatusCode.OK, branch);
+        }
         [HttpPost]
         public HttpResponseMessage PostOne([FromBody]CompanyInfo newComp)
         {
-            
+
             DataContext _dbContext = new DataContext();
             var alreadyExists = _dbContext.Companies
                 .Where(x => x.Name == newComp.company.Name).Any();
@@ -67,7 +67,7 @@ namespace CompaniesManagement.Controllers
             {
                 return Request.CreateErrorResponse(HttpStatusCode.ResetContent,
                 "the same company already exists");
-            } 
+            }
             List<Company> kidsRefer = new List<Company>();
             Company comData = newComp.company;
             if (newComp.parent != null)
@@ -85,9 +85,9 @@ namespace CompaniesManagement.Controllers
                     return Request.CreateErrorResponse(HttpStatusCode.BadRequest,
                     "Companies aren't sublings ");
                 }
-                kidsRefer = kids; 
+                kidsRefer = kids;
             }
-     
+
             _dbContext.Companies.Add(comData);
             _dbContext.SaveChanges();
 
@@ -103,36 +103,95 @@ namespace CompaniesManagement.Controllers
                 _dbContext.SaveChanges();
             }
 
+            bool time = true;
+            List<Company> box = new List<Company>();
+            var key = _dbContext.Companies
+            .Where(x => x.company_Identifier == comData.company_Identifier).First();
+            key.baseCompanyId = comData.baseCompanyId.Value;
+            while (time == true)
+            {
+                if (key.baseCompanyId == null)
+                {
+                    time = false;
+                }
+                var point = _dbContext.Companies
+                    .Where(x => key.baseCompanyId == x.company_Identifier).First();
+                box.Add(point);
+                key = point;
+            }
+            foreach (var p in box)
+            {
+                p.AnnualEarnings += comData.AnnualEarnings;
+            }
+
+            _dbContext.SaveChanges();
             CompanyInfo responceObj = new CompanyInfo()
             {
                 company = comData,
                 childs = newComp.childs,
                 parent = comData.baseCompanyId
             };
+
+            var httpResp = Request.CreateResponse(HttpStatusCode.OK, responceObj);
             
-            var httpResp = Request.CreateResponse(HttpStatusCode.OK , responceObj);
-           
-           
             return httpResp;
         }
+               
         [HttpDelete]
-        public HttpResponseMessage DeleteOne(int idComp)
+        [Route("api/Crud/One")]
+        public HttpResponseMessage DeleteOne([FromBody]Company delComp)
         {
             DataContext _dbContext = new DataContext();
-            var deleteComp= _dbContext.Companies
-                .First(x => x.company_Identifier == idComp);
-            if (deleteComp == null)
+            
+            var toDelete= _dbContext.Companies
+                .First(x => x.company_Identifier == delComp.company_Identifier);
+            if (toDelete == null)
             {
                 return Request.CreateErrorResponse(HttpStatusCode.NotFound,
-                    "Company with id " + idComp.ToString() + " not found to delete");
+                    "Company with id " + delComp.company_Identifier.ToString() + " not found to delete");
             }
             else
-            {
-                _dbContext.Companies.Remove(deleteComp);
+            {   // find the relatives
+                var relatItems = _dbContext.Companies
+                    .Where(x => x.baseCompanyId == toDelete.company_Identifier).ToList();
+                //    .Select(x=> x.company_Identifier).ToArray();
+                Company MajorItem;
+                int? parent;
+                try
+                {
+                    MajorItem = _dbContext.Companies
+                    .Where(x => x.company_Identifier == toDelete.baseCompanyId).First();
+                }
+                catch (Exception e) { MajorItem = null; }
+                if (MajorItem != null)
+                {
+                    foreach (var p in relatItems)
+                    {
+                        p.baseCompanyId = MajorItem.company_Identifier;
+                    }
+                    parent = MajorItem.company_Identifier;
+                }
+                else
+                {
+                    foreach (var p in relatItems)
+                    {
+                        p.baseCompanyId = null;
+                    }
+                    parent = null;
+                }
+                _dbContext.Companies.Remove(toDelete);
                 _dbContext.SaveChanges();
-                return Request.CreateResponse(HttpStatusCode.OK);
-            }
 
+                int[] ch = relatItems.Select(x => x.company_Identifier).ToArray();
+                CompanyInfo delInfo = new CompanyInfo()
+                {
+                    company = toDelete,
+                    childs = ch,
+                    parent = parent
+                };
+               
+                return Request.CreateResponse(HttpStatusCode.OK, delInfo);
+            }
         }
         
         [Route("api/Crud/put")]

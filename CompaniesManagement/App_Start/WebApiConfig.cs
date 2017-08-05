@@ -14,23 +14,19 @@ namespace CompaniesManagement
 
             // Web API routes
             config.MapHttpAttributeRoutes();
-            /*
-            config.Routes.MapHttpRoute(
-                            name: "SpreadApi",
-                            routeTemplate: "api/Crud/ids",
-                            defaults: new { ids = RouteParameter.Optional },
-                            constraints: new
-                            {
-                                id = new IntRouteConstraint()
-                            }
-                        );
-*/
+           
             config.Routes.MapHttpRoute(
                 name: "DefaultApi",
                 routeTemplate: "api/{controller}/{ids}",
                 defaults: new { ids = RouteParameter.Optional }
             );
+            /*
+            config.Routes.MapHttpRoute(
+            name: "delApi",
+            routeTemplate: "api/{controller}/{del}",
+            defaults: new { del = RouteParameter.Optional}
             
+       );*/
 
         }
     }

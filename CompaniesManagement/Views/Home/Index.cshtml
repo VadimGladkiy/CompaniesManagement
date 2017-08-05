@@ -11,7 +11,11 @@
     <style>
         body 
         {
-
+            font-family:'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+            font-size: 16px;
+            margin-left: 30px;
+            margin-top: 30px;
+            background-color: silver;
         }
         div 
         {
@@ -22,6 +26,8 @@
         }
         .wrapBlock {
             margin-top: 10px;
+            font-family:Courier New, Courier, monospace;
+            font-size: 18px;
         }
         .wrapBlock i{
             background-color: darkgrey;
@@ -69,7 +75,7 @@
 #putForm {
     width: 300px;
     height: 100px;
-    background: lightblue;
+    background-color: darkgreen;
         }
 /* Пoдлoжкa */
 #overlay {
@@ -107,7 +113,7 @@
             updateButton.addClass('updateItem');
 
             var deleteButton = $('<a href="#"><i class="fa fa-times"></i></a>');
-            // deleteButton.id = value.company_Identifier + '_deleteThe';
+            deleteButton.addClass('deleteItem');
 
             var $addForm = $('<form id ="addItemBase" >' +
                                  '<p>write Name of a new company</p>' +
@@ -119,7 +125,8 @@
                                  '<input type="hidden" id="baseParent" value=""/>' +
                                  '</form>');
             var labelCollector
-                       = $('<label>Collect items marked checkboxes into a new base item</label>');
+                       = $('<label>link sibling items marked checkboxes into a new base item <br/> for them ' +
+                'or create a new item -> </label>');
             var butCollector = $('<input type="button" id="Unite" value="Collect"/>');
             
             var checkboxes = [];
@@ -127,122 +134,178 @@
 
             $('body').prepend(butCollector);
             $('body').prepend(labelCollector);
-            $.ajax({
-                type: 'Get',
-                url: '/api/Crud',
-                dataType: 'json',
-                success: function (data)
-                {
-                    $.each(data, function (index, value)
+            function load(){
+                $.ajax({
+                    type: 'Get',
+                    url: '/api/Crud',
+                    dataType: 'json',
+                    success: function (data)
                     {
-                        var myDiv = $('<div></div>')
-                        .attr('id', value.company_Identifier);
-                        myDiv.addClass('wrapBlock');
+                        $.each(data, function (index, value)
+                        {
+                            var myDiv = $('<div></div>')
+                            .attr('id', value.company_Identifier);
+                            myDiv.addClass('wrapBlock');
 
-                        myDiv.html('<span class="align"> '+value.company_Identifier+ '|' +
-                        value.Name+ '|' + value.AnnualEarnings+'</span>');
+                            myDiv.html('<span class="align"> '+
+                            value.Name+ '|' + value.AnnualEarnings+'</span>');
 
-                        // appends
-                        if (value.baseCompanyId == null) {
+                            // appends
+                            if (value.baseCompanyId == null) {
                    
-                            $(myDiv).prepend(additionBase.clone());
-                            $('body').append(myDiv);
+                                $(myDiv).prepend(additionBase.clone());
+                                $('#tree').append(myDiv);
                     
-                            myDiv.prepend('<span style="margin-left: ' + 0 + 'px"></span>');
-                        }
-                        else {
-                            var baseId = value.baseCompanyId;
-          
-                            var span = parseInt($('#'+baseId).find('span').css('margin-left'));
-                            if (isNaN(span)) span = 0;
-                 
-                            $(myDiv).prepend(additionBase.clone());
-                            myDiv.prepend('<span style="margin-left: ' + (span +50) + 'px"></span>');
-
-                            $('#' + baseId).append(myDiv);
-                        }
-               
-                        $(myDiv).append(createButton.clone());
-                        $(myDiv).append(readButton.clone());
-                        $(myDiv).append(updateButton.clone());
-                        $(myDiv).append(deleteButton.clone());
-
-                    });
-                    $('.addBaseHandler').on('click', function () { });
-                    $('#Unite').on('click', function () {
-                        checkboxes = [];
-                        $(this).after($addForm);
-                        var box = $('.addBaseHandler:checked');
-
-                        var par = box.eq(0).parent().parent().attr('id');
-                        $("#baseParent").val(par);
-                        //   console.log(par);
-                        var point;
-                        var Div;
-                        $.each(box, function (index, value) {
-                            Div = $(value).parent();
-                            point = Div.attr('id');
-                            checkboxes.push(point);
-                        })
-                        //console.log('checkboxes ' + checkboxes);
-                    });
-                    $('.addSubItem').on('click', function () {
-                       // console.log('addSubClicked');
-                        $('#Unite').after($addForm);
-                        var par = $(this).parent().attr('id');
-                        $("#baseParent").val(par);
-
-                        $('.addBaseHandler').prop('checked', false);
-                        checkboxes = [];
-                    });
-                    $('.readBranch').on('click', function () {
-                        itemsIdsForRead = [];
-                        var $branches = $(this).parent().parent().find('div.wrapBlock');
-                       
-                        $.each($branches, function (index) {
-                            itemsIdsForRead.push($(this).attr('id'));
-                        });
-                     //   console.log(itemsIdsForRead);
-                        
-                        $.ajax({
-                            url: '/api/Crud/ids/ByIds',
-                            type: 'Get',
-                            dataType: 'json',
-                            //сontentType: 'application/x-www-form-urlencoded',
-                            data: { "ids": itemsIdsForRead },
-                            сontentType: 'application/json',
-                            success: function (data) {
-                           // Spreads(data);
-                            $('#overlay').fadeIn(400, // снaчaлa плaвнo пoкaзывaем темную пoдлoжку
-                            function () { // пoсле выпoлнения предъидущей aнимaции
-                                $('#modal_form')
-                                .css('display', 'block') // убирaем у мoдaльнoгo oкнa display: none;
-                                .animate({ opacity: 1, top: '50%' }, 200); // плaвнo прибaвляем прoзрaчнoсть oднoвременнo сo съезжaнием вниз
-                                $('#modal_form').find('#modal_content')
-                                    .append(Spreads(data));
-
-                            });
-                               
+                                myDiv.prepend('<span class="tab" style="margin-left: ' + 0 + 'px"></span>');
                             }
-                        });
-                    });
-                    $('.updateItem').on('click', function () {
+                            else {
+                                var baseId = value.baseCompanyId;
+          
+                                var span = parseInt($('#'+baseId).find('span').css('margin-left'));
+                                if (isNaN(span)) span = 0;
+                 
+                                $(myDiv).prepend(additionBase.clone());
+                                myDiv.prepend('<span class="tab" style="margin-left: ' + (span +40) + 'px"></span>');
 
-                        var par = $(this).parent().attr('id');
-                        $("#putId").val(par);
-                        // показать окно
-                        $('#putForm')
-                        .css('display', 'block') 
-                        .animate({ opacity: 1, top: '50%' }, 200);
-                    });
-                    $('#putForm').find('#putSubmit').on('click', function ()
-                    {
-                        $.ajax({
-                            url: '/api/Crud/put',
-                            type: 'Put',
-                            dataType: 'json',
-                            сontentType: 'application/x-www-form-urlencoded',
-                            data: {                                
+                                $('#' + baseId).append(myDiv);
+                            }
+               
+                            $(myDiv).append(createButton.clone());
+                            $(myDiv).append(readButton.clone());
+                            $(myDiv).append(updateButton.clone());
+                            $(myDiv).append(deleteButton.clone());
+
+                        });
+                       
+                        $('#Unite').on('click', function () {
+                            checkboxes = [];
+                            $(this).after($addForm);
+                            var box = $('.addBaseHandler:checked');
+
+                            var par = box.eq(0).parent().parent().attr('id');
+                            $("#baseParent").val(par);
+                            //   console.log(par);
+                            var point;
+                            var Div;
+                            $.each(box, function (index, value) {
+                                Div = $(value).parent();
+                                point = Div.attr('id');
+                                checkboxes.push(point);
+                            })
+                            //console.log('checkboxes ' + checkboxes);
+                        });
+                        $('.addSubItem').on('click', function () {
+                            EventAddingBinder($(this));
+                            /*
+                            alert('clicked');
+                            $('#Unite').after($addForm);
+                            var par = $(this).parent().attr('id');
+                            $("#baseParent").val(par);
+
+                            $('.addBaseHandler').prop('checked', false);
+                            checkboxes = [];
+                            */
+                        });
+                        $('.readBranch').on('click', function () {
+                            EventReadingBinder($(this));
+                            /*
+                            itemsIdsForRead = [];
+                            var $branches = $(this).parent().parent().find('div.wrapBlock');
+                       
+                            $.each($branches, function (index) {
+                                itemsIdsForRead.push($(this).attr('id'));
+                            });                   
+                       
+                            $.ajax({
+                                url: '/api/Crud/ids/ByIds',
+                                type: 'Get',
+                                dataType: 'json',
+                                //сontentType: 'application/x-www-form-urlencoded',
+                                data: { "ids": itemsIdsForRead },
+                                сontentType: 'application/json',
+                                success: function (data) {
+                                    // Spreads(data);
+                                    $('#overlay').fadeIn(400, // снaчaлa плaвнo пoкaзывaем темную пoдлoжку
+                                    function () { // пoсле выпoлнения предъидущей aнимaции
+                                        $('#modal_form')
+                                        .css('display', 'block') // убирaем у мoдaльнoгo oкнa display: none;
+                                        .animate({ opacity: 1, top: '50%' }, 200); // плaвнo прибaвляем прoзрaчнoсть oднoвременнo сo съезжaнием вниз
+                                        $('#modal_form').find('#modal_content')
+                                            .append(Spreads(data));
+
+                                    });
+                               
+                                }
+                            });
+                            */
+                        });
+                        $('.updateItem').on('click', function () {
+                            EventPuttingBinder($(this));
+                            /*
+                            var par = $(this).parent().attr('id');
+                            $("#putId").val(par);
+                            // показать окно
+                            $('#putForm')
+                            .css('display', 'block') 
+                            .animate({ opacity: 1, top: '50%' }, 200);
+                            */
+                        });
+                        $('.deleteItem').on('click', function ()
+                        {
+                            EventDeletingBinder($(this));
+                            /*
+                            var delId = parseInt($(this).parent().attr('id'));                  
+                            $.ajax({
+                                url: '/api/Crud/One',
+                                type: 'delete',
+                                data:
+                                    {
+                                        "company_Identifier": delId,
+                                        "Name": '',
+                                        "AnnualEarnings": '',
+                                        "baseCompanyId": ''                                    
+                                    },
+                                dataType: 'json',
+                                сontentType: 'application/json',
+                                success: function (data)
+                                {
+                                    var Base;
+                                    var $Derivatives;
+                                   
+                                    $.each(data,function(index, value)
+                                    {
+                                        if(typeof $Derivatives =='undefined'){
+                                            $Derivatives = $('#' + value.company_Identifier);
+                                            Base = value. baseCompanyId;
+                                        }
+                                        else 
+                                            $Derivatives.add('#'+ value.company_Identifier);
+                                    });
+                                    console.log(Base);
+                                    if (Base != null)
+                                    {
+                                        $Derivatives.find('span.tab').css('margin-left',
+                                            $Derivatives.parent().find('span.tab').css('margin-left'));
+
+                                        $Derivatives.unwrap();
+                                        $('#' + Base).prepend($Derivatives);
+                                    }
+                                    else
+                                    {
+                                        $Derivatives.find('span.tab').val(0);
+                                    }
+                                }
+                            });
+                            */
+                        });
+                        $('#putForm').find('#putSubmit').on('click', function ()
+                        {
+                            $.ajax({
+                                url: '/api/Crud/put',
+                                type: 'Put',
+                                dataType: 'json',
+                                сontentType: 'application/x-www-form-urlencoded',
+                                data: {                                
                                     "company_Identifier" :
                                     $('#putForm').find('#putId').val(),
                                     "Name" :
@@ -251,89 +314,232 @@
                                     $('#putForm').find('#putEarn').val(),
                                     "baseCompanyId" :
                                     $('#putForm').find('#putParent').val()                                
-                            },
-                            success: function (data) {
-                                console.log(data);
-                                alert('success');
-                            }
+                                },
+                                success: function (data) {
+                                    $('#' + data.company_Identifier)
+                                    .find('span.align')
+                                    .text(data.Name +'|' +data.AnnualEarnings);
+                                }
+                            });
+
+                        });
+                        $addForm.find('#baseSubmit').on('click', function () {
+                            //  console.log($('#baseParent').val());
+                            //    console.log(checkboxes);
+                            $.ajax({
+                                url: '/api/Crud',
+                                type: 'Post',
+                                dataType: 'json',
+                                сontentType: 'application/x-www-form-urlencoded',
+                                data: {
+                                    "company":
+                                        {
+                                            company_Identifier: '',
+                                            Name: $('#baseName').val(),
+                                            AnnualEarnings: $('#baseEarn').val(),
+                                            baseCompanyId: ''
+                                        },
+
+                                    "childs": checkboxes,
+                                    "parent": $('#baseParent').val()
+                                },
+                                success: function (data) {
+                                   /* $('#tree').empty();
+                                    return load();*/
+                                    // define block
+                                    var $bDiv = $('<div></div>')
+                                    .attr('id', data.company.company_Identifier);
+                                    $bDiv.addClass('wrapBlock');
+
+                                    $bDiv.html('<span class="align"> ' +
+                                    data.company.Name + '|' + data.company.AnnualEarnings + '</span>');
+
+                                    var span = 0;
+                                    // if parent is exists
+                                    var $parent;
+                                    //  console.log('FirstParent'+data.parent);
+                                    // if parent does not exist
+                                    if (data.parent == null) {
+                                        $parent = $('body').find('#tree');
+                                        $($parent).prepend($bDiv);
+                                        span = -40;
+                                    } else {
+                                        var $parent = $('#' + data.parent);
+                                        //     console.log($parent.attr('id'));
+                                        span = parseInt($parent.find('span.tab').css('margin-left'));
+                                        if (isNaN(span)) span = 0;
+                                        console.log('span' + span);
+                                        $parent.append($bDiv);
+                                    
+                                    }
+                                    // add links
+                                
+                                    $bDiv.prepend('<span class="tab" style="margin-left: ' + (span + 40) + 'px"></span>');
+                                    $($bDiv).find('span.tab').after(additionBase.clone());
+
+                                    $($bDiv).append(createButton.clone()
+                                        .on('click', function () {
+                                            EventAddingBinder($(this));
+                                        })
+                                        );
+                                      
+                                    $($bDiv).append(readButton.clone()
+                                        .on('click', function () {
+                                            EventReadingBinder($(this));
+                                        })
+                                        );
+                                    $($bDiv).append(updateButton.clone()
+                                        .on('click', function () {
+                                            EventPuttingBinder($(this));
+                                        })
+                                        );
+                                    $($bDiv).append(deleteButton.clone()
+                                        .on('click', function () {
+                                            EventDeletingBinder($(this));
+                                        })
+                                        );
+                                    // if children
+                                    if (data.childs.length > 0) {
+                                       
+                                        var sp = parseInt( $parent.children('div')
+                                            .children('span.tab').first().css('margin-left'));
+                                        if (isNaN(sp)) sp = 0;
+                                   //      console.log('sp' + sp);
+                                        var $children = $([]);
+                                        data.childs.forEach(function (item, index, array) {
+                                            $children.push($('#' + item));
+                                   //       console.log(item);
+                                        });
+                                        $children.each(function (index, value) {
+                                   //       console.log('index' + index);
+                                            var p = value.attr('id');
+                                  //        console.log(p);
+                                            $('div#' + p).appendTo($bDiv);
+                                           
+                                            var spans =[];
+                                            var temp = $('div#' + p).find('span.tab');
+                                            temp.each(function (index, value) {
+                                                var p = parseInt($(value).css('margin-left'));
+                                                $(value).css('margin-left', p + 40);
+                                            });
+
+                                   //       console.log('spans' + spans);
+                                        });
+                                    }
+                                }
+                            })
+                                .fail(function () {
+                                    alert('data is not added');
+                                });
+                        });
+                        $addForm.find('#closeForm').on('click', function () {
+                            $(this).parent().detach();
+
+                        });
+                    }}); 
+            }
+            load();
+            function EventAddingBinder($Elem)
+            {
+               // alert('clicked');
+                $('#Unite').after($addForm);
+                var par = $Elem.parent().attr('id');
+                $("#baseParent").val(par);
+                $('.addBaseHandler').prop('checked', false);
+                checkboxes = [];
+            }
+            function EventReadingBinder($Elem)
+            {
+        //        alert('Readig');
+                itemsIdsForRead = [];
+                var $head = $Elem.parent();
+                itemsIdsForRead.push($head.prop('id'));
+                console.log('$head' + $head.prop('id'));
+                var $branches = $head.find('div.wrapBlock');
+                console.log($branches);
+                $branches.each(function (index) {
+                    itemsIdsForRead.push($(this).prop('id'));
+                });
+                console.log(itemsIdsForRead);
+                $.ajax({
+                    url: '/api/Crud/ids/ByIds',
+                    type: 'Get',
+                    dataType: 'json',
+                    //сontentType: 'application/x-www-form-urlencoded',
+                    data: { "ids": itemsIdsForRead },
+                    сontentType: 'application/json',
+                    success: function (data) {
+                        // Spreads(data);
+                        $('#overlay').fadeIn(400, // снaчaлa плaвнo пoкaзывaем темную пoдлoжку
+                        function () { // пoсле выпoлнения предъидущей aнимaции
+                            $('#modal_form')
+                            .css('display', 'block') // убирaем у мoдaльнoгo oкнa display: none;
+                            .animate({ opacity: 1, top: '50%' }, 200); // плaвнo прибaвляем прoзрaчнoсть oднoвременнo сo съезжaнием вниз
+                            $('#modal_form').find('#modal_content')
+                                .append(Spreads(data));
+
                         });
 
-                    });
-                    $addForm.find('#baseSubmit').on('click', function () {
-                        //  console.log($('#baseParent').val());
-                            console.log(checkboxes);
-                        $.ajax({
-                            url: '/api/Crud',
-                            type: 'Post',
-                            dataType: 'json',
-                            сontentType: 'application/x-www-form-urlencoded',
-                            data: {
-                                "company":
-                                    {
-                                        company_Identifier: '',
-                                        Name: $('#baseName').val(),
-                                        AnnualEarnings: $('#baseEarn').val(),
-                                        baseCompanyId: ''
-                                    },
+                    }
+                });
+            }
+            function EventPuttingBinder($Elem)
+            {
+                var par = $Elem.parent().attr('id');
+                $("#putId").val(par);
+                // показать окно
+                $('#putForm')
+                .css('display', 'block')
+                .animate({ opacity: 1, top: '50%' }, 200);
+            }
+            function EventDeletingBinder($Elem)
+            {
+                var delId = parseInt($Elem.parent().attr('id'));
+                $.ajax({
+                    url: '/api/Crud/One',
+                    type: 'delete',
+                    data:
+                        {
+                            "company_Identifier": delId,
+                            "Name": '',
+                            "AnnualEarnings": '',
+                            "baseCompanyId": ''
+                        },
+                    dataType: 'json',
+                    сontentType: 'application/json',
+                    success: function (data) {
+                        var derived = data.childs;
+                        var Base = data.parent;
+                        var curr = data.company.company_Identifier;
+                        var $Derivatives;
 
-                                "childs": checkboxes,
-                                "parent": $('#baseParent').val()
-                            },
-                            success: function (data) {
-                                var $parent = $('#' + data.parent);
-                                //console.log($parent.attr('id'));
-
-                                var $bDiv = $('<div></div>');
-                                $bDiv.attr('id', data.company.company_Identifier);
-                                $bDiv.addClass('wrapBlock');
-
-                                $bDiv.text(' ' + data.company.company_Identifier + '|' +
-                                data.company.Name + '|' + data.company.AnnualEarnings + ' ');
-
-                                var span = parseInt($parent.find('span').css('margin-left'));
-                                if (isNaN(span)) span = 0;
-                                $parent.append($bDiv);
-                                $bDiv.prepend('<span style="margin-left: ' + (span + 50) + 'px"></span>');
-                                $($bDiv).find('span').after(additionBase.clone());
-
-                                $($bDiv).append(createButton.clone());
-                                $($bDiv).append(readButton.clone());
-                                $($bDiv).append(updateButton.clone());
-                                $($bDiv).append(deleteButton.clone());
-
-                                if (data.childs.length > 0) {
-                                    var $ChildrenDivs;
-                                    data.childs.forEach(function (item, index, array) {
-
-                                        if (typeof $ChildrenDivs == 'undefined') {
-                                            $ChildrenDivs = $('#' + item);
-                                            // console.log('if=');
-                                        } else {
-                                            $ChildrenDivs.add($('#' + item));
-                                            // console.log('else');
-                                        }
-                                    });
-                                    // wraping
-                                    var sp = $ChildrenDivs.find('span').first();
-                                    var spE = parseInt(sp.css('margin-left'));
-                                    if (isNaN(spE)) spE = 0;
-                                    //console.log(spE);
-                                    sp.css('margin-left', spE + 50);
-                                    $bDiv.append($ChildrenDivs);
-
+                        if (typeof derived != 'undefined')
+                        {
+                            derived.forEach(function (item, index, array) {
+                                if (typeof $Derivatives == 'undefined')
+                                    $Derivatives = $('#' + item);
+                                else {                                   
+                                    $Derivatives.add($('#' + item));
+                                }
+                            });
+                            
+                            $Derivatives.find('span.tab').css('margin-left',
+                            $Derivatives.parent().find('span.tab').css('margin-left'));
+                            
+                            if (typeof $Derivatives != 'undefined') {
+                                if (Base == null) {
+                                    $('#tree').append($Derivatives);
+                                }
+                                else {
+                                    $('#' + Base).append($Derivatives);
                                 }
                             }
-                        })
-                            .fail(function () {
-                                alert('data is not added');
-                            });
-                    });
-                    $addForm.find('#closeForm').on('click', function () {
-                        $(this).parent().detach();
-
-                    });
-                }}); 
-            
+                        //    console.log('derived:' + $Derivatives);
+                        }                       
+                        $('#' + curr).remove();                       
+                    }
+                });
+            }
             function Spreads(data)
             {
                 var str =[];
@@ -345,7 +551,7 @@
                         str.push('<li> depended companies: </li>');
                     } else
                     {
-                        str.push( '<li>' + value.Name+',' + '</li>');
+                        str.push( '<li>' + value.Name+ '|'+value.AnnualEarnings+ ' ;' + '</li>');
                     }
                     //console.log(str);
                 });
@@ -380,6 +586,7 @@
         <ul id="modal_content"></ul>
     </div>
     <div id="overlay"></div><!-- Пoдлoжкa -->
+    <div id="tree"></div>
     <div id="putForm">
         <!-- Сaмo oкнo -->
         <span id="PUT_close">X</span> <!-- Кнoпкa зaкрыть -->
